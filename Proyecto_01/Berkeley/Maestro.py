@@ -1,30 +1,10 @@
-import json 
 import time 
 import zmq  
-from datetime import datetime as dt
+import datetime
 
-def tiempo():
-	time = dt.now() 						#Formato 24hr
-	hour = []
-	hour.append(time.hour)
-	hour.append(time.minute)
-	hour.append(time.second)
-	return hour
-
-def difference(refference,hour):
-	difference = []
-	for i in range(len(hour)):
-		difference.append(refference[i]-hour[i])
-	return difference
-
-def toSeconds(hora):
-	segundos = 0
-	segundos += hora[0] * 3600
-	segundos += hora[1] * 60
-	segundos += hora[2]
-	return segundos
-
-Nofslaves = 1 								#Cantidad de esclavos
+#Cantidad de esclavos
+Nofslaves = 3
+#Lista con las diferencias de tiempo entre maestro y esclavos
 dif=[]
 
 context = zmq.Context()
@@ -37,17 +17,36 @@ _ = input("Presione enter para comenzar ")
 
 try:
 	while True:
+		print("\n***************************Iniciando ciclo de sincronización***************************\n")
+		#Inicia la solicitud de relojes de los esclavos
 		for i in range(Nofslaves):
-			msg = "What is your time?"
+			msg = "Solicitud de hora"
+			#Envía un mensaje para indicar que comienza la sincronización
 			sender.send(msg.encode('utf-8'))
-		refference = tiempo()							#Se calcula tiempo de referencia actual
+			time.sleep(2)
+		
+		#Obtención de los relojes de los esclavos
 		for i in range(Nofslaves):
-			message = json.loads(receiver.recv().decode('utf-8'))
-			dif.append(difference(message, refference))
-			print(refference)
-			print(message)
-			print(dif) 
+			#Recibe el reloj del esclavo como string 
+			timeString = receiver.recv().decode('utf-8')
+			#Convierte el string en un objeto datetime
+			clockTime = datetime.datetime.fromisoformat(timeString)
+			print("Hora del Maestro: " + str(datetime.datetime.now().time()))
+			print("Hora del Esclavo " + str(i) + ": " + str(clockTime.time()))
+			#Calcula la diferencia entre el reloj del maestro y el del esclavo
+			timeDiff = datetime.datetime.now() - clockTime
+			#Agrega la diferencia a una lista
+			dif.append(timeDiff)
+			time.sleep(2)
 
+		#Calcula el promedio de las diferencias de tiempo de todos los esclavos
+		averageTimeDiff = sum(dif, datetime.timedelta(0, 0))/len(dif)
+		
+		#Envía la actualización de tiempo a todos los esclavos
+		for i in range(Nofslaves):
+			sender.send(str(averageTimeDiff).encode('utf-8'))
+			time.sleep(2)
+		
 		time.sleep(20)
 except KeyboardInterrupt:
 	print("Saliendo")

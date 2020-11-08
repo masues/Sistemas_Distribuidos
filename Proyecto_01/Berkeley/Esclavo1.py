@@ -30,7 +30,7 @@ try:
 		timeDiffString = receiver.recv().decode('utf-8') 
 		#Convierte el string en un objeto datetime
 		timeDiff = datetime.datetime.strptime(timeDiffString, "%H:%M:%S.%f")
-		print("Esclavo 0 se debe actualizar " + str(timeDiff.time()))
+		print("Esclavo 1 se debe actualizar " + str(timeDiff.time()))
 		#Objeto timedelta para adicionar la cantidad de tiempo al reloj del esclavo
 		addTime = datetime.timedelta(hours = timeDiff.hour,
 																 minutes = timeDiff.minute,
@@ -38,6 +38,6 @@ try:
 																 microseconds = timeDiff.microsecond)
 		#Actualiza el reloj del esclavo
 		updateTime = datetime.datetime.now() + addTime
-		print("Hora del Esclavo 0 actualizada: " + str(updateTime.time()))
+		print("Hora del Esclavo 1 actualizada: " + str(updateTime.time()))
 except KeyboardInterrupt:
 	print("Saliendo")
