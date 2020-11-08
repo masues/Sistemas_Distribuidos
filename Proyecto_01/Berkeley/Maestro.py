@@ -1,3 +1,11 @@
+# 
+# Sistemas Distribuidos, Proyecto 1
+# Programa Maestro.py
+# Fecha de creación 7 de noviembre, 2020
+# Última modificación: 8 de noviembre, 2020
+#
+
+
 import time 
 import zmq  
 import datetime
