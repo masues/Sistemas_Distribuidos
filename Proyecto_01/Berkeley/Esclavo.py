@@ -12,37 +12,47 @@ import time
 import zmq
 import pickle
 
-#Obtiene la hora del esclavo modificando los minutos y segundos
-#Se realiza la modificación para obtener una variación en la hora respecto al maestro
-def randomHour():
-	time = datetime.datetime.now() 						
-	time.minute + ri(-1,1)
-	time.second + ri(-5,5)
-	return time
+#Obtiene un offset de la hora del esclavo modificando los minutos y segundos
+def getRandomOffset():
+	return datetime.timedelta(minutes=ri(-10,10), seconds=ri(-30,30))
 
 context = zmq.Context()
-receiver = context.socket(zmq.PULL) 
-receiver.connect("tcp://localhost:5557") 
-sender = context.socket(zmq.PUSH)
-sender.connect("tcp://localhost:5558") 
+socket = context.socket(zmq.REQ)
+socket.connect("tcp://localhost:5555")
+
+id = str(input("Inserta el identificador del esclavo: "))
 
 try:
 	while True:
+		print("\n****************Iniciando ciclo de sincronización en el esclavo****************\n")
+		#Envia el id
+		socket.send(id.encode('utf-8'))
 		#Recibe el mensaje para iniciar la sincronización
-		message = receiver.recv().decode('utf-8')
+		message = socket.recv().decode('utf-8')
 		print(message)
+		time.sleep(1)
+		#Obtiene el offset aleatorio del esclavo
+		clientOffset = getRandomOffset()
 		#Asigna el tiempo al esclavo
-		clientTime = randomHour()
+		clientTime = datetime.datetime.now() + clientOffset
+		print("Hora del esclavo " + id +": "+ str(clientTime))
 		#Envía su hora al maestro
-		sender.send(pickle.dumps(clientTime))
+		socket.send(pickle.dumps(clientTime))
+		#Recibe la señal de espera
+		socket.recv()
+		time.sleep(1)
+		#Envia señal para solicitar el offset
+		socket.send("Trae el offset".encode('utf-8'))
 		#Recibe la cantidad de tiempo, como string, al que debe ajustarse su reloj
-		timeDiffString = receiver.recv() 
+		timeDiffString = socket.recv()
 		#Convierte el string en un objeto timedelta para adicionar la cantidad de
 		#tiempo al reloj del esclavo
 		addTime = pickle.loads(timeDiffString)
-		print("Esclavo 0 se debe actualizar " + str(addTime))
+		print("Esclavo " + id + " se debe actualizar: " + str(addTime))
 		#Actualiza el reloj del esclavo
-		updateTime = datetime.datetime.now() + addTime
-		print("Hora del Esclavo 0 actualizada: " + str(updateTime.time()))
+		updateTime = datetime.datetime.now() + clientOffset + addTime
+		print("Hora del Esclavo " + id + " actualizada: " + str(updateTime))
+		time.sleep(1)
+
 except KeyboardInterrupt:
 	print("Saliendo")
