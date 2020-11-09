@@ -1,7 +1,16 @@
+# 
+# Sistemas Distribuidos, Proyecto 1
+# Programa Esclavo1.py
+# Fecha de creación: 7 de noviembre, 2020
+# Última modificación: 8 de noviembre, 2020
+#
+#
+
 from random import randint as ri
 import datetime
-import time 
-import zmq  
+import time
+import zmq
+import pickle
 
 #Obtiene la hora del esclavo modificando los minutos y segundos
 #Se realiza la modificación para obtener una variación en la hora respecto al maestro
@@ -25,17 +34,13 @@ try:
 		#Asigna el tiempo al esclavo
 		clientTime = randomHour()
 		#Envía su hora al maestro
-		sender.send(str(clientTime).encode('utf-8'))
+		sender.send(pickle.dumps(clientTime))
 		#Recibe la cantidad de tiempo, como string, al que debe ajustarse su reloj
-		timeDiffString = receiver.recv().decode('utf-8') 
-		#Convierte el string en un objeto datetime
-		timeDiff = datetime.datetime.strptime(timeDiffString, "%H:%M:%S.%f")
-		print("Esclavo 1 se debe actualizar " + str(timeDiff.time()))
-		#Objeto timedelta para adicionar la cantidad de tiempo al reloj del esclavo
-		addTime = datetime.timedelta(hours = timeDiff.hour,
-																 minutes = timeDiff.minute,
-																 seconds = timeDiff.second,
-																 microseconds = timeDiff.microsecond)
+		timeDiffString = receiver.recv() 
+		#Convierte el string en un objeto timedelta para adicionar la cantidad de
+		#tiempo al reloj del esclavo
+		addTime = pickle.loads(timeDiffString)
+		print("Esclavo 1 se debe actualizar " + str(addTime))
 		#Actualiza el reloj del esclavo
 		updateTime = datetime.datetime.now() + addTime
 		print("Hora del Esclavo 1 actualizada: " + str(updateTime.time()))

@@ -1,15 +1,14 @@
 # 
 # Sistemas Distribuidos, Proyecto 1
 # Programa Maestro.py
-# Fecha de creación 7 de noviembre, 2020
+# Fecha de creación: 7 de noviembre, 2020
 # Última modificación: 8 de noviembre, 2020
 #
-#
 
-
-import time 
-import zmq  
+import time
+import zmq
 import datetime
+import pickle
 
 #Cantidad de esclavos
 Nofslaves = 3
@@ -37,9 +36,9 @@ try:
 		#Obtención de los relojes de los esclavos
 		for i in range(Nofslaves):
 			#Recibe el reloj del esclavo como string 
-			timeString = receiver.recv().decode('utf-8')
+			timeString = receiver.recv()
 			#Convierte el string en un objeto datetime
-			clockTime = datetime.datetime.fromisoformat(timeString)
+			clockTime = pickle.loads(timeString)
 			print("Hora del Maestro: " + str(datetime.datetime.now().time()))
 			print("Hora del Esclavo " + str(i) + ": " + str(clockTime.time()))
 			#Calcula la diferencia entre el reloj del maestro y el del esclavo
@@ -53,7 +52,7 @@ try:
 		
 		#Envía la actualización de tiempo a todos los esclavos
 		for i in range(Nofslaves):
-			sender.send(str(averageTimeDiff).encode('utf-8'))
+			sender.send(pickle.dumps(averageTimeDiff))
 			time.sleep(2)
 		
 		time.sleep(20)
