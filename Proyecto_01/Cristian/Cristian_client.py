@@ -13,6 +13,9 @@ from random import randint as ri
 def getRandomOffset():
 	return datetime.timedelta(minutes=ri(-10,10), seconds=ri(-30,30))
 
+#Identificador del cliente
+id = str(input("Inserta el identificador del clinte: "))
+
 try:
 	# Lee el archivo que contiene el número de servidores activos
 	stream = open("serv.txt", "r") 
@@ -32,7 +35,7 @@ for i in range(1,int(numofserver)):
 	port += 1
 solicitud = 0
 
-_ = input("Presione enter solo si ya estan activados todos los clientes...")
+_ = input("Presione enter solo si ya están activados todos los clientes...")
 
 try:
 	# Reinicia el archivo de servidores para que pueda utilizarse en la siguiente
@@ -54,8 +57,10 @@ try:
 		for i in range(1,int(numofserver)):
 			# Guarda el tiempo en que se envió la petición
 			tinicial = datetime.datetime.now()
+			#Mensaje de solicitud
+			msg = "Petición de hora del cliente " + id
 			# Envía la solicitud al servidor
-			client.send("What is your hour?".encode('utf-8'))
+			client.send(msg.encode('utf-8'))
 			# El servidor responde con su hora
 			reply = pickle.loads(client.recv())
 			# Guarda el tiempo en que recibe la respuesta del servidor
