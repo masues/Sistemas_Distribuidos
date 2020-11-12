@@ -2,29 +2,16 @@
 # Sistemas Distribuidos, Proyecto 1
 # Programa Cristian_client.py
 # Fecha de creación: 5 de noviembre, 2020
-# Última modificación: 5 de noviembre, 2020
+# Última modificación: 11 de noviembre, 2020
 #
 #
 
-import json 
+import pickle, time, zmq, datetime
 from random import randint as ri
-from datetime import datetime as dt
-import time 
-import zmq  
 
-# Función que permite obtener una lista que contiene una hora aleatoria
-# Se establece un valor variando los minutos y segundos de la hora actual
-def randomHour():
-	time = dt.now() 						
-	hour = []
-	hour.append(time.hour)
-	hour.append(time.minute + ri(-4,4))
-	hour.append(time.second + ri(-9,9))
-	return hour
-
-# Permite dar formato a la lista que representa la hora
-def formatHour(hour):
-	return str(hour[0])+":"+str(hour[1])+":"+str(hour[2])
+#Obtiene un offset de la hora del esclavo modificando los minutos y segundos
+def getRandomOffset():
+	return datetime.timedelta(minutes=ri(-10,10), seconds=ri(-30,30))
 
 try:
 	# Lee el archivo que contiene el número de servidores activos
@@ -62,14 +49,28 @@ try:
 		# Incrementa el contador de solicitudes para mostrarlo en pantalla
 		solicitud += 1
 		# Obtiene un reloj aleatorio
-		hour = randomHour()
+		hour = datetime.datetime.now() + getRandomOffset()
 		print("Enviando solicitud: "+str(solicitud)+"...")
 		for i in range(1,int(numofserver)):
+			# Guarda el tiempo en que se envió la petición
+			tinicial = datetime.datetime.now()
 			# Envía la solicitud al servidor
 			client.send("What is your hour?".encode('utf-8'))
 			# El servidor responde con su hora
-			reply = json.loads(client.recv().decode('utf-8'))
-			# Imprime la hora actualizada
-			print("Hora actual-->"+formatHour(hour)+" Hora actualizada--->"+formatHour(reply)+" del servidor: "+str(reply[3]))
+			reply = pickle.loads(client.recv())
+			# Guarda el tiempo en que recibe la respuesta del servidor
+			tfinal = datetime.datetime.now()
+			# Calcula el tround provocado por los tiempos de ida y vuelta
+			tround = tfinal - tinicial
+			# El offset es tround / 2
+			offset = tround / 2
+			# Imprime la hora previa y la actualizada
+			print("\n****************Mostrando resultados****************\n")
+			print("Offset:                                   "+str(offset))
+			print("Hora del cliente previa sincronización:   "+str(hour))
+			print("Hora recibida del servidor "+str(reply[1])+":             " +
+			  str(reply[0])
+			)
+			print("Hora actualizada:                         "+str(reply[0]+offset))
 except KeyboardInterrupt:
 	print("Saliendo")

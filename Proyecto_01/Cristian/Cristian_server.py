@@ -2,22 +2,17 @@
 # Sistemas Distribuidos, Proyecto 1
 # Programa Cristian_server.py
 # Fecha de creación: 5 de noviembre, 2020
-# Última modificación: 5 de noviembre, 2020
+# Última modificación: 11 de noviembre, 2020
 #
 #
 
-import json 
-import time 
-import zmq  
-from datetime import datetime as dt
+import pickle, time, zmq, datetime
 
 # Genera una lista que reperesenta al reloj UTC
 def tiempo(server):
-	time = dt.now() 						
+	time = datetime.datetime.now()
 	hour = []
-	hour.append(time.hour)
-	hour.append(time.minute)
-	hour.append(time.second)
+	hour.append(time)
 	hour.append(server)
 	return hour
 
@@ -67,6 +62,6 @@ try:
 		# Genera una lista con el tiempo UTC del servidor actual
 		refference = tiempo(numofserver)
 		# Envía la información del del tiempo UTC del servidor actual
-		server.send(json.dumps(refference).encode('utf-8'))
+		server.send(pickle.dumps(refference))
 except KeyboardInterrupt:
 	print("Saliendo")
